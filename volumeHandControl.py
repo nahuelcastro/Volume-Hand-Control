@@ -10,8 +10,8 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 ################################
 wCam, hCam = 640, 480
-handRangeMax = 280
-handRangeMin = 23
+handRangeMax = 350
+handRangeMin = 60
 ################################
 
 cap = cv2.VideoCapture(0)
@@ -26,6 +26,10 @@ volume = cast(interface, POINTER(IAudioEndpointVolume))
 volRange = volume.GetVolumeRange()
 minVol = volRange[0]
 maxVol = volRange[1]
+volBar = 400
+volInit = volume.GetMasterVolumeLevel()
+volPer = np.interp(volInit, [minVol, maxVol], [0, 100])
+# volPer = volInit
 
 while True:
     success, img = cap.read()
@@ -44,17 +48,17 @@ while True:
         cv2.circle(img, (cx, cy), 12, (255, 0, 255), cv2.FILLED)
 
 
-        # Hand range 45 - 255
-        # Volume Range -64 - 0
-
         vol = np.interp(lenght, [handRangeMin, handRangeMax], [minVol, maxVol]) # map lenght to volume
         volPer = np.interp(lenght, [handRangeMin, handRangeMax], [0, 100]) # map lenght to volume
+        volBar = np.interp(lenght, [handRangeMin, handRangeMax], [400, 150]) # map lenght to volume
 
-        cv2.putText(img, 'Vol: ' + str(int(volPer)), (cx + 10, cy + 10), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
         cv2.putText(img, 'len: ' + str(int(lenght)), (500, 30), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
         volume.SetMasterVolumeLevel(vol, None)
-        # if vol < 10:
-        #     cv2.circle(img, (cx, cy), 8, (0, 255, 0), cv2.FILLED)
+
+    cv2.rectangle(img, (50, 150), (85, 400), (0, 255, 0), 3)
+    cv2.rectangle(img, (50, int(volBar)), (85, 400), (0, 255, 0), cv2.FILLED)
+    cv2.putText(img, f'Vol: {str(int(volPer))} %', (40, 450), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
+
 
 
     # FPS viewer
